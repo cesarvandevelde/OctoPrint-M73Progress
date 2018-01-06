@@ -10,7 +10,7 @@ remains empty. This small plugin remedies the situation by injecting
 firmware needs to understand the `M73` command. See below for instructions for
 [Marlin](https://github.com/MarlinFirmware/Marlin).
 
-**TODO:** Picture
+![](pic.jpg)
 
 ## Setup
 
