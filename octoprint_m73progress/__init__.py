@@ -1,24 +1,34 @@
 # coding=utf-8
 from __future__ import absolute_import
 import octoprint.plugin
+from octoprint.events import Events
 
 
 class M73progressPlugin(octoprint.plugin.ProgressPlugin,
                         octoprint.plugin.EventHandlerPlugin):
 
     def on_event(self, event, payload):
-        if event == octoprint.events.Events.PRINT_STARTED:
+        if event == Events.PRINT_STARTED or event == Events.PRINT_DONE:
+            # Firmware manages progress bar when printing from SD card
+            if payload.get("origin", "") == "sdcard":
+                return
+
+        if event == Events.PRINT_STARTED:
             self._set_progress(0)
-        elif event == octoprint.events.Events.PRINT_DONE:
+        elif event == Events.PRINT_DONE:
             self._set_progress(100)
 
     def on_print_progress(self, storage, path, progress):
         if not self._printer.is_printing():
             return
+
+        # Firmware manages progress bar when printing from SD card
+        if storage == "sdcard":
+            return
+
         self._set_progress(progress)
 
     def _set_progress(self, progress):
-        # TODO: only for local prints, not SD!
         self._printer.commands("M73 P{}".format(progress))
 
     def get_update_information(self):
