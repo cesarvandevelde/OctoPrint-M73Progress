@@ -26,20 +26,19 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
         if storage == "sdcard":
             return
 
-	time = -1
-	try:
-		currentData = self._printer.get_current_data()
-		time = currentData["progress"]["printTime"]
-	except Exception as e:
-		self._logger.info("Caught an exception {0}\nTraceback:{1}".format(e,traceback.format_exc()))
-		
+    try:
+        currentData = self._printer.get_current_data()
+        time = currentData["progress"]["printTime"]
+    except KeyError:
+        self._set_progress(progress)
+    else:
         self._set_progress(progress, time)
 
-    def _set_progress(self, progress, time=-1):
-		if time == -1:
-			self._printer.commands("M73 P{}".format(progress))
-		else:
-			self._printer.commands("M73 P{0} T{1}".format(progress, time))
+    def _set_progress(self, progress, time=None):
+        if time == None:
+            self._printer.commands("M73 P{}".format(progress))
+        else:
+            self._printer.commands("M73 P{0} T{1}".format(progress, time))
 
     def get_update_information(self):
         return dict(
