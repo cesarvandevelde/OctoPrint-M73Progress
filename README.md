@@ -30,6 +30,10 @@ not enabled by default. You can enable it by uncommenting line 576 in
 #define LCD_SET_PROGRESS_MANUALLY
 ```
 
+**Note:** Marlin requires that `SDSUPPORT` be enabled in order for
+`LCD_SET_PROGRESS_MANUALLY` to work. See
+[MarlinFirmware/Marlin#9178](https://github.com/MarlinFirmware/Marlin/issues/9178).
+
 ## Configuration
 
 This plugin has no configurable options. Once enabled, it will automatically
