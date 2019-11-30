@@ -8,6 +8,9 @@ from octoprint.printer import PrinterCallback
 class ProgressMonitor(PrinterCallback):
     def __init__(self, *args, **kwargs):
         super(ProgressMonitor, self).__init__(*args, **kwargs)
+        self.reset()
+
+    def reset(self):
         self.completion = None
         self.time_left_s = None
 
@@ -30,6 +33,7 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
                 return
 
         if event == Events.PRINT_STARTED:
+            self._progress.reset()
             self._set_progress(0)
         elif event == Events.PRINT_DONE:
             self._set_progress(100, 0)
