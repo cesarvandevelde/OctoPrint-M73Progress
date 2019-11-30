@@ -1,11 +1,27 @@
 # coding=utf-8
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 import octoprint.plugin
 from octoprint.events import Events
+from octoprint.printer import PrinterCallback
+
+
+class ProgressMonitor(PrinterCallback):
+    def __init__(self, *args, **kwargs):
+        super(ProgressMonitor, self).__init__(*args, **kwargs)
+        self.completion = None
+        self.time_left_s = None
+
+    def on_printer_send_current_data(self, data):
+        self.completion = data["progress"]["completion"]
+        self.time_left_s = data["progress"]["printTimeLeft"]
 
 
 class M73progressPlugin(octoprint.plugin.ProgressPlugin,
-                        octoprint.plugin.EventHandlerPlugin):
+                        octoprint.plugin.EventHandlerPlugin,
+                        octoprint.plugin.StartupPlugin):
+    def on_after_startup(self):
+        self._progress = ProgressMonitor()
+        self._printer.register_callback(self._progress)
 
     def on_event(self, event, payload):
         if event == Events.PRINT_STARTED or event == Events.PRINT_DONE:
@@ -16,7 +32,7 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
         if event == Events.PRINT_STARTED:
             self._set_progress(0)
         elif event == Events.PRINT_DONE:
-            self._set_progress(100)
+            self._set_progress(100, 0)
 
     def on_print_progress(self, storage, path, progress):
         if not self._printer.is_printing():
@@ -26,10 +42,23 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
         if storage == "sdcard":
             return
 
-        self._set_progress(progress)
+        progress = self._progress.completion or 0.0
 
-    def _set_progress(self, progress):
-        self._printer.commands("M73 P{}".format(progress))
+        if self._progress.time_left_s is not None:
+            # M73 expects time left value in minutes, not seconds
+            time_left = self._progress.time_left_s / 60
+        else:
+            time_left = None
+
+        self._set_progress(progress=progress, time_left=time_left)
+
+    def _set_progress(self, progress, time_left=None):
+        if time_left is None:
+            self._printer.commands("M73 P{:.0f}".format(progress))
+        else:
+            self._printer.commands(
+                "M73 P{:.0f} R{:.0f}".format(progress, time_left)
+            )
 
     def get_update_information(self):
         return dict(
