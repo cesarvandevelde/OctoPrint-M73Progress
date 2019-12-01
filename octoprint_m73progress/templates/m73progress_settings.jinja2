@@ -1,0 +1,18 @@
+<h3>{{ _("M73Progress Settings") }}</h3>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label">{{ _("Output time left") }}</label>
+        <div class="controls">
+            <input type="checkbox" class="input-block-level" data-bind="checked: settings.plugins.m73progress.output_time_left">
+            <div class="help-block">{{ _("Sends the estimated time remaining using the <code>R</code> parameter. This is only supported by certain firmwares (e.g. Marlin 2.0 and Prusa firmware).") }}</div>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">{{ _("Use time estimate") }}</label>
+        <div class="controls">
+            <input type="checkbox" class="input-block-level" data-bind="checked: settings.plugins.m73progress.progress_from_time">
+            <div class="help-block">{{ _("Calculate progress based on time elapsed and time remaining. Useful for <code>PrintTimeGenius</code> users.") }}</div>
+        </div>
+    </div>
+</form>

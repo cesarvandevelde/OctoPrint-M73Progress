@@ -3,6 +3,7 @@ from __future__ import absolute_import, division
 import octoprint.plugin
 from octoprint.events import Events
 from octoprint.printer import PrinterCallback
+from flask_babel import gettext
 
 
 class ProgressMonitor(PrinterCallback):
@@ -21,10 +22,16 @@ class ProgressMonitor(PrinterCallback):
 
 class M73progressPlugin(octoprint.plugin.ProgressPlugin,
                         octoprint.plugin.EventHandlerPlugin,
-                        octoprint.plugin.StartupPlugin):
+                        octoprint.plugin.StartupPlugin,
+                        octoprint.plugin.TemplatePlugin,
+                        octoprint.plugin.SettingsPlugin):
     def on_after_startup(self):
         self._progress = ProgressMonitor()
         self._printer.register_callback(self._progress)
+
+        settings = self._settings
+        self.output_time_left = settings.get_boolean(["output_time_left"])
+        self.progress_from_time = settings.get_boolean(["progress_from_time"])
 
     def on_event(self, event, payload):
         if event == Events.PRINT_STARTED or event == Events.PRINT_DONE:
@@ -64,6 +71,28 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
                 "M73 P{:.0f} R{:.0f}".format(progress, time_left)
             )
 
+    def get_settings_defaults(self):
+        return dict(
+            output_time_left=True,
+            progress_from_time=False
+        )
+
+    def on_settings_save(self, data):
+        settings = self._settings
+        self.output_time_left = settings.get_boolean(["output_time_left"])
+        self.progress_from_time = settings.get_boolean(["progress_from_time"])
+
+        super(M73progressPlugin, self).on_settings_save(self, data)
+
+    def get_template_configs(self):
+        return [
+            dict(
+                type="settings",
+                name=gettext("M73 Progress"),
+                custom_bindings=False
+            )
+        ]
+
     def get_update_information(self):
         return dict(
             m73progress=dict(
@@ -80,6 +109,9 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
                 pip="https://github.com/cesarvandevelde/OctoPrint-M73Progress/archive/{target_version}.zip"
             )
         )
+
+
+__plugin_name__ = "M73 Progress Plugin"
 
 
 def __plugin_load__():
