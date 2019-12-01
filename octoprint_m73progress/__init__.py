@@ -54,22 +54,21 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
             return
 
         progress = self._progress.completion or 0.0
+        time_left = None
 
-        if self._progress.time_left_s is not None:
+        if self.output_time_left and self._progress.time_left_s is not None:
             # M73 expects time left value in minutes, not seconds
             time_left = self._progress.time_left_s / 60
-        else:
-            time_left = None
 
         self._set_progress(progress=progress, time_left=time_left)
 
     def _set_progress(self, progress, time_left=None):
         if time_left is None:
-            self._printer.commands("M73 P{:.0f}".format(progress))
+            gcode = "M73 P{:.0f}".format(progress)
         else:
-            self._printer.commands(
-                "M73 P{:.0f} R{:.0f}".format(progress, time_left)
-            )
+            gcode = "M73 P{:.0f} R{:.0f}".format(progress, time_left)
+
+        self._printer.commands(gcode)
 
     def get_settings_defaults(self):
         return dict(
@@ -78,11 +77,11 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
         )
 
     def on_settings_save(self, data):
+        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+
         settings = self._settings
         self.output_time_left = settings.get_boolean(["output_time_left"])
         self.progress_from_time = settings.get_boolean(["progress_from_time"])
-
-        super(M73progressPlugin, self).on_settings_save(self, data)
 
     def get_template_configs(self):
         return [
