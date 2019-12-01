@@ -5,6 +5,10 @@ from octoprint.events import Events
 from octoprint.printer import PrinterCallback
 from flask_babel import gettext
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ProgressMonitor(PrinterCallback):
     def __init__(self, *args, **kwargs):
@@ -13,10 +17,12 @@ class ProgressMonitor(PrinterCallback):
 
     def reset(self):
         self.completion = None
+        self.time_elapsed_s = None
         self.time_left_s = None
 
     def on_printer_send_current_data(self, data):
         self.completion = data["progress"]["completion"]
+        self.time_elapsed_s = data["progress"]["printTime"]
         self.time_left_s = data["progress"]["printTimeLeft"]
 
 
@@ -53,12 +59,24 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
         if storage == "sdcard":
             return
 
-        progress = self._progress.completion or 0.0
+        progress = 0.0
         time_left = None
 
         if self.output_time_left and self._progress.time_left_s is not None:
             # M73 expects time left value in minutes, not seconds
             time_left = self._progress.time_left_s / 60
+
+        if (
+            self.progress_from_time and
+            self._progress.time_left_s is not None and
+            self._progress.time_elapsed_s is not None
+        ):
+            time_left_s = self._progress.time_left_s
+            time_elapsed_s = self._progress.time_elapsed_s
+            progress = time_elapsed_s / (time_left_s + time_elapsed_s)
+            progress = progress * 100.0
+        else:
+            progress = self._progress.completion or 0.0
 
         self._set_progress(progress=progress, time_left=time_left)
 
