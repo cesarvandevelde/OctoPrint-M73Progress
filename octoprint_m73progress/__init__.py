@@ -129,6 +129,7 @@ class M73progressPlugin(octoprint.plugin.ProgressPlugin,
 
 
 __plugin_name__ = "M73 Progress Plugin"
+__plugin_pythoncompat__ = ">=2.7,<4"
 
 
 def __plugin_load__():
