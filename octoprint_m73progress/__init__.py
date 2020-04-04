@@ -1,11 +1,13 @@
 # coding=utf-8
 from __future__ import absolute_import, division
+
+import logging
+
 import octoprint.plugin
 from octoprint.events import Events
 from octoprint.printer import PrinterCallback
 from flask_babel import gettext
 
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,14 @@ class ProgressMonitor(PrinterCallback):
         self.time_left_s = data["progress"]["printTimeLeft"]
 
 
-class M73progressPlugin(octoprint.plugin.ProgressPlugin,
-                        octoprint.plugin.EventHandlerPlugin,
-                        octoprint.plugin.StartupPlugin,
-                        octoprint.plugin.TemplatePlugin,
-                        octoprint.plugin.SettingsPlugin):
+class M73progressPlugin(
+    octoprint.plugin.ProgressPlugin,
+    octoprint.plugin.EventHandlerPlugin,
+    octoprint.plugin.StartupPlugin,
+    octoprint.plugin.TemplatePlugin,
+    octoprint.plugin.SettingsPlugin,
+    octoprint.plugin.RestartNeedingPlugin
+):
     def on_after_startup(self):
         self._progress = ProgressMonitor()
         self._printer.register_callback(self._progress)
