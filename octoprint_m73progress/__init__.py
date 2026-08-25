@@ -5,6 +5,7 @@ import logging
 
 import octoprint.plugin
 from octoprint.events import Events
+from octoprint.filemanager.destinations import FileDestinations
 from octoprint.printer import PrinterCallback
 from flask_babel import gettext
 
@@ -46,8 +47,8 @@ class M73progressPlugin(
 
     def on_event(self, event, payload):
         if event == Events.PRINT_STARTED or event == Events.PRINT_DONE:
-            # Firmware manages progress bar when printing from SD card
-            if payload.get("origin", "") == "sdcard":
+            # Firmware manages progress bar when not printing from local storage
+            if payload.get("origin", "") != FileDestinations.LOCAL:
                 return
 
         if event == Events.PRINT_STARTED:
@@ -60,8 +61,8 @@ class M73progressPlugin(
         if not self._printer.is_printing():
             return
 
-        # Firmware manages progress bar when printing from SD card
-        if storage == "sdcard":
+        # Firmware manages progress bar when not printing from local storage
+        if storage != FileDestinations.LOCAL:
             return
 
         progress = 0.0
