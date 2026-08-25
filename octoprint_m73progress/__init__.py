@@ -115,6 +115,9 @@ class M73progressPlugin(
             )
         ]
 
+    def is_template_autoescaped(self):
+        return True
+
     def get_update_information(self):
         return dict(
             m73progress=dict(
